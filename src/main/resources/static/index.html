@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tax Gap Detection System</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e3a5f;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .header p {
+            margin-top: 8px;
+            color: #dbeafe;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 100px);
+        }
+
+        .sidebar {
+            width: 230px;
+            background: #243447;
+            padding-top: 20px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: none;
+            color: white;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .sidebar button:hover {
+            background: #34495e;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: white;
+            width: 220px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #555;
+        }
+
+        .card p {
+            font-size: 30px;
+            margin-top: 15px;
+            color: #1e3a5f;
+            font-weight: bold;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .submit-btn {
+            background: #1e3a5f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #34495e;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #1e3a5f;
+            color: white;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Tax Gap Detection System</h1>
+    <p>Automated Tax Compliance Monitoring & Detection</p>
+</div>
+
+<div class="container">
+
+    <div class="sidebar">
+
+        <button onclick="showSection('dashboard')">🏠 Dashboard</button>
+
+        <button onclick="showSection('addTransaction')">➕ Add Transaction</button>
+
+        <button onclick="showSection('transactions')">📋 Transactions</button>
+
+        <button onclick="showSection('exceptions')">⚠ Exceptions</button>
+
+        <button onclick="showSection('reports')">📊 Reports</button>
+
+    </div>
+
+
+    <div class="content">
+
+        <!-- DASHBOARD -->
+
+        <div id="dashboard" class="section active">
+
+            <h2>Dashboard</h2>
+
+            <div class="card-container">
+
+                <div class="card">
+                    <h3>Total Transactions</h3>
+                    <p id="totalTransactions">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Total Exceptions</h3>
+                    <p id="totalExceptions">0</p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ADD TRANSACTION -->
+
+        <div id="addTransaction" class="section">
+
+            <h2>Add Transaction</h2>
+
+            <input type="text" id="transactionId"
+                   placeholder="Transaction ID">
+
+            <input type="date" id="date">
+
+            <input type="text" id="customerId"
+                   placeholder="Customer ID">
+
+            <input type="number" id="amount"
+                   placeholder="Amount">
+
+            <input type="number" step="0.01" id="taxRate"
+                   placeholder="Tax Rate (Example: 0.18)">
+
+            <input type="number" id="reportedTax"
+                   placeholder="Reported Tax">
+
+            <input type="text" id="transactionType"
+                   placeholder="Transaction Type (SALE/REFUND)">
+
+            <button class="submit-btn"
+                    onclick="addTransaction()">
+
+                Submit Transaction
+
+            </button>
+
+            <p id="message"></p>
+
+        </div>
+
+
+        <!-- TRANSACTIONS -->
+
+        <div id="transactions" class="section">
+
+            <h2>All Transactions</h2>
+
+            <button class="submit-btn"
+                    onclick="loadTransactions()">
+
+                Load Transactions
+
+            </button>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Expected Tax</th>
+                        <th>Tax Gap</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="transactionTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- EXCEPTIONS -->
+
+        <div id="exceptions" class="section">
+
+            <h2>Exceptions</h2>
+
+            <button class="submit-btn"
+                    onclick="loadExceptions()">
+
+                Load Exceptions
+
+            </button>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Rule Name</th>
+                        <th>Severity</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+
+                <tbody id="exceptionTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- REPORTS -->
+
+        <div id="reports" class="section">
+
+            <h2>Reports</h2>
+
+            <input type="text"
+                   id="reportCustomerId"
+                   placeholder="Enter Customer ID">
+
+            <button class="submit-btn"
+                    onclick="loadCustomerReport()">
+
+                Customer Tax Report
+
+            </button>
+
+            <div id="reportResult"
+                 style="margin-top:20px;">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function showSection(sectionId) {
+
+    document.querySelectorAll(".section")
+        .forEach(section => {
+
+            section.classList.remove("active");
+
+        });
+
+    document.getElementById(sectionId)
+        .classList.add("active");
+
+}
+
+
+async function addTransaction() {
+
+    const transaction = {
+
+        transactionId:
+            document.getElementById("transactionId").value,
+
+        date:
+            document.getElementById("date").value,
+
+        customerId:
+            document.getElementById("customerId").value,
+
+        amount:
+            parseFloat(document.getElementById("amount").value),
+
+        taxRate:
+            parseFloat(document.getElementById("taxRate").value),
+
+        reportedTax:
+            parseFloat(document.getElementById("reportedTax").value),
+
+        transactionType:
+            document.getElementById("transactionType").value
+
+    };
+
+
+    try {
+
+        const response = await fetch("/api/transactions", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(transaction)
+
+        });
+
+
+        if (response.ok) {
+
+            document.getElementById("message").innerHTML =
+                "Transaction added successfully!";
+
+        } else {
+
+            document.getElementById("message").innerHTML =
+                "Error adding transaction.";
+
+        }
+
+    } catch (error) {
+
+        document.getElementById("message").innerHTML =
+            "Server connection error.";
+
+    }
+
+}
+
+
+async function loadTransactions() {
+
+    const response =
+        await fetch("/api/transactions");
+
+    const transactions =
+        await response.json();
+
+    const table =
+        document.getElementById("transactionTable");
+
+    table.innerHTML = "";
+
+    transactions.forEach(t => {
+
+        table.innerHTML += `
+
+            <tr>
+
+                <td>${t.transactionId}</td>
+
+                <td>${t.customerId}</td>
+
+                <td>${t.amount}</td>
+
+                <td>${t.expectedTax}</td>
+
+                <td>${t.taxGap}</td>
+
+                <td>${t.complianceStatus}</td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+
+
+async function loadExceptions() {
+
+    const response =
+        await fetch("/api/exceptions");
+
+    const exceptions =
+        await response.json();
+
+    const table =
+        document.getElementById("exceptionTable");
+
+    table.innerHTML = "";
+
+    exceptions.forEach(e => {
+
+        table.innerHTML += `
+
+            <tr>
+
+                <td>${e.customerId}</td>
+
+                <td>${e.ruleName}</td>
+
+                <td>${e.severity}</td>
+
+                <td>${e.message}</td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+
+
+async function loadCustomerReport() {
+
+    const customerId =
+        document.getElementById("reportCustomerId").value;
+
+    const response =
+        await fetch(
+            "/api/reports/customer-tax-summary?customerId="
+            + customerId
+        );
+
+    const report =
+        await response.json();
+
+    document.getElementById("reportResult").innerHTML = `
+
+        <div class="card">
+
+            <h3>Customer: ${report.customerId}</h3>
+
+            <p style="font-size:16px;">
+
+                Total Transactions:
+                ${report.totalTransactions}
+
+                <br><br>
+
+                Total Amount:
+                ${report.totalAmount}
+
+                <br><br>
+
+                Total Expected Tax:
+                ${report.totalExpectedTax}
+
+                <br><br>
+
+                Total Tax Gap:
+                ${report.totalTaxGap}
+
+            </p>
+
+        </div>
+
+    `;
+
+}
+
+
+async function loadDashboard() {
+
+    try {
+
+        const transactionResponse =
+            await fetch("/api/transactions");
+
+        const transactions =
+            await transactionResponse.json();
+
+        document.getElementById("totalTransactions")
+            .innerText = transactions.length;
+
+
+        const exceptionResponse =
+            await fetch("/api/exceptions");
+
+        const exceptions =
+            await exceptionResponse.json();
+
+        document.getElementById("totalExceptions")
+            .innerText = exceptions.length;
+
+    } catch (error) {
+
+        console.log("Dashboard loading error");
+
+    }
+
+}
+
+
+loadDashboard();
+
+</script>
+
+</body>
+
+</html>
